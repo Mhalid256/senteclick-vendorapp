@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "17319572619",
+    "project_id": "senteclick-5e295",
+    "storage_bucket": "senteclick-5e295.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17319572619:android:79fa44e28fb6928432108e",
+        "android_client_info": {
+          "package_name": "com.techsate.senteclick"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYuUv1YunzLOITQZps83vIjGzH3MU98uI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17319572619:android:1551c150e7c2c6ac32108e",
+        "android_client_info": {
+          "package_name": "com.techsate.senteclick.seller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYuUv1YunzLOITQZps83vIjGzH3MU98uI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
