@@ -29,7 +29,7 @@ dependencies:
   flutter_html: ^3.0.0
   firebase_core: ^4.4.0
   firebase_messaging: ^16.1.1
-  flutter_local_notifications: ^20.1.0
+  flutter_local_notifications: ^19.5.0  # downgraded for Dart 3.7.0 compatibility
   path_provider: ^2.1.5
   country_code_picker: ^3.4.1
   pin_code_fields: ^8.0.1
@@ -64,8 +64,8 @@ dependencies:
   open_file_manager: ^2.0.1
   just_the_tooltip: ^0.0.12
   syncfusion_flutter_pdfviewer: ^32.2.4
-  audioplayers: ^6.1.0
-  flutter_xlider: ^3.5.0
+  audioplayers: ^6.0.0  # pin to an existing version compatible with Dart 3.7.0
+  flutter_xlider: ^3.5.0  # corrected from flutter_xslider
   video_player: ^2.10.1
   chewie: ^1.13.0
   get_thumbnail_video: ^0.7.3
@@ -78,13 +78,11 @@ dependencies:
 dependency_overrides:
   syncfusion_flutter_core: ^32.2.4
 
-
 dev_dependencies:
-  icons_launcher:
+  icons_launcher: any
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
-
 
 icons_launcher:
   image_path: "assets/images/ic_launcher.png"
@@ -100,10 +98,6 @@ flutter_icons:
   ios: true
   android: true
   image_path: "assets/images/ic_launcher.png"
-
-
-
-
 
 flutter:
   uses-material-design: true
