@@ -69,7 +69,7 @@ dependencies:
   video_player: ^2.10.1
   chewie: ^1.13.0
   get_thumbnail_video: ^0.7.3
-  flutter_svg: ^2.2.3
+  flutter_svg: ^2.0.10
   collection: any
   fluttertoast: ^9.0.0
   flutter_image_compress: ^2.4.0
