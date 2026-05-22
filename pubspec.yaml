@@ -64,7 +64,7 @@ dependencies:
   open_file_manager: ^2.0.1
   just_the_tooltip: ^0.0.12
   syncfusion_flutter_pdfviewer: ^32.2.4
-  audioplayers: ^5.4.0
+  audioplayers: ^6.1.0
   flutter_xlider: ^3.5.0
   video_player: ^2.10.1
   chewie: ^1.13.0
