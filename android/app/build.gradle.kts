@@ -1,16 +1,12 @@
 import java.util.Properties
 import java.io.FileInputStream
 
-
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
-
-
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -20,20 +16,19 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.techsate.senteclick.seller"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36   // ✅ changed from flutter.compileSdkVersion to 36
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17   // ✅ changed to 17
+        targetCompatibility = JavaVersion.VERSION_17   // ✅ changed to 17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "17"   // ✅ changed to 17
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.techsate.senteclick.seller"
         multiDexEnabled = true
         minSdk = flutter.minSdkVersion
@@ -46,16 +41,16 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it as String)}
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
             storePassword = keystoreProperties["storePassword"] as String?
         }
     }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug") // or "release" if you have real keystore
+            signingConfig = signingConfigs.getByName("release")
         }
     }
-
 }
 
 flutter {

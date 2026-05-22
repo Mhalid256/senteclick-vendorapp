@@ -12,7 +12,7 @@ import flutter_downloader
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     FirebaseApp.configure()
-    GMSServices.provideAPIKey("AIzaSyCJgNunTPj_oNBjSfwjRUmvaXLFp9qdaVw")
+    GMSServices.provideAPIKey("AIzaSyBN1J0Tda2NPnlsV-lbokf-i7e03TdJ57I")
     GeneratedPluginRegistrant.register(with: self)
     FlutterDownloaderPlugin.setPluginRegistrantCallback(registerPlugins)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
