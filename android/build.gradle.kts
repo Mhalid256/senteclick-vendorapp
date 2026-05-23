@@ -6,6 +6,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.20")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20")
+        }
+    }
 }
 
 // Move build output to parent build folder
@@ -25,16 +32,4 @@ subprojects {
 // Clean task
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
-}
-
-subprojects {
-    afterEvaluate {
-        configurations.all {
-            resolutionStrategy {
-                force("org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
-                force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.20")
-                force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20")
-            }
-        }
-    }
 }
