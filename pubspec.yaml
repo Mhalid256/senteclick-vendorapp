@@ -24,7 +24,7 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_typeahead: ^5.2.0
   autocomplete_textfield: ^2.0.1
-  dotted_border: 2.0.0+3
+  dotted_border: ^3.1.0
   flutter_html: ^3.0.0
   firebase_core: ^4.4.0
   firebase_messaging: ^16.2.2
