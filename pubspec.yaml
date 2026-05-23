@@ -46,7 +46,7 @@ dependencies:
   flutter_slidable: ^4.0.3
   readmore: ^3.0.0
   flutter_html_table: ^3.0.0
-  google_maps_flutter: ^2.14.2
+  google_maps_flutter: ^2.11.0
   geocoding: ^4.0.0
   geolocator: ^14.0.2
   syncfusion_flutter_datepicker: ^27.1.48
