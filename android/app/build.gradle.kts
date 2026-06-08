@@ -17,6 +17,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.techsate.senteclick.seller"
     compileSdk = 36
+    buildToolsVersion = "34.0.0"   // ← add this line
     ndkVersion = "28.2.13676358"
 
     compileOptions {
