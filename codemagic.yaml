@@ -1,0 +1,24 @@
+workflows:
+  vendor-app-workflow:
+    name: Vendor App Workflow
+    environment:
+      flutter: stable
+      java: 17
+      android_signing:
+        - senteclick   # ← must match the name in Codemagic UI
+    scripts:
+      - flutter clean
+      - flutter pub get
+      - flutter build apk --release --no-tree-shake-icons
+    artifacts:
+      - build/**/outputs/**/*.aab
+
+
+
+
+
+
+
+
+
+      

@@ -1,11 +1,15 @@
+// lib/features/auth/domain/services/auth_service_interface.dart
+
 import 'package:image_picker/image_picker.dart';
 import 'package:sixvalley_vendor_app/features/auth/domain/models/register_model.dart';
 
 abstract class AuthServiceInterface {
+  // ── Vendor ────────────────────────────────────────────────────────────────
   Future<dynamic> login({String? emailAddress, String? password});
   Future<dynamic> setLanguageCode(String languageCode);
   Future<dynamic> forgotPassword(String identity);
-  Future<dynamic> resetPassword(String identity, String otp ,String password, String confirmPassword, String? token);
+  Future<dynamic> resetPassword(String identity, String otp, String password,
+      String confirmPassword, String? token);
   Future<dynamic> verifyOtp(String identity, String otp);
   Future<dynamic> updateToken();
   Future<void> saveUserToken(String token);
@@ -16,8 +20,27 @@ abstract class AuthServiceInterface {
   String getUserEmail();
   String getUserPassword();
   Future<dynamic> clearUserNumberAndPassword();
-  Future<dynamic> registration(XFile? profileImage, XFile? shopLogo, XFile? shopBanner, XFile? secondaryBanner, RegisterModel registerModel, XFile? tinCertificate);
-  Future<dynamic>  firebaseAuthTokenStore({required String userInput, required String token});
-  Future<dynamic> firebaseAuthVerify({required String phoneNumber, required String session, required String otp, required bool isForgetPassword});
+  Future<dynamic> registration(
+      XFile? profileImage,
+      XFile? shopLogo,
+      XFile? shopBanner,
+      XFile? secondaryBanner,
+      RegisterModel registerModel,
+      XFile? tinCertificate);
+  Future<dynamic> firebaseAuthTokenStore(
+      {required String userInput, required String token});
+  Future<dynamic> firebaseAuthVerify(
+      {required String phoneNumber,
+      required String session,
+      required String otp,
+      required bool isForgetPassword});
   Future<dynamic> checkVendorExistPhone({required String phoneNumber});
+
+  // ── Employee (NEW) ────────────────────────────────────────────────────────
+  Future<dynamic> employeeLogin(
+      {required String email, required String password});
+  Future<dynamic> fetchAndSaveEmployeeProfile();
+  bool getIsEmployee();
+  Map<String, bool> getEmployeeModules();
+  bool employeeHasAccess(String module);
 }

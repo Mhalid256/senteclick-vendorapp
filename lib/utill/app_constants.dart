@@ -14,6 +14,20 @@ class AppConstants {
   static const String baseUrl = 'https://senteclick.com';
 
   static const String loginUri = '/api/v3/seller/auth/login';
+
+  // ── Employee / Staff login (NEW) ─────────────────────────────────────────
+  // POST body: { email, password } → returns { token }
+  static const String employeeLoginUri =
+      '/api/v3/seller/auth/vendor-employee/login';
+
+  // GET (token required) → returns profile + module_access map
+  static const String employeeProfileUri = '/api/v3/seller/employee/profile';
+
+  // GET (token required) → returns filtered dashboard counts
+  static const String employeeDashboardUri =
+      '/api/v3/seller/employee/dashboard';
+  // ─────────────────────────────────────────────────────────────────────────
+
   static const String configUri = '/api/v1/config';
   static const String sellerUri = '/api/v3/seller/seller-info';
   static const String sellerAndBankUpdate = '/api/v3/seller/seller-update';
@@ -242,7 +256,6 @@ class AppConstants {
       '/api/v1/customer/order/generate-invoice?order_id=';
   static const String editOrderSubmit =
       '/api/v3/seller/orders/edit-order-submit';
-
   static const String editOrderValidation =
       '/api/v3/seller/orders/edit-order-validation';
   static const String switchToCod = '/api/v3/seller/orders/assign-order-in-cod';
@@ -316,6 +329,12 @@ class AppConstants {
   static const String langKey = 'lang';
   static const String showCookies = 'cookies';
   static const String bluetoothMacAddress = 'bluetooth_mac_address';
+
+  // ── Employee session storage keys (NEW) ──────────────────────────────────
+  // Persisted in SharedPreferences to survive app restarts.
+  static const String isEmployeeKey = 'is_employee'; // bool
+  static const String employeeModuleKey = 'employee_modules'; // JSON string
+  // ─────────────────────────────────────────────────────────────────────────
 
   static List<LanguageModel> languages = [
     LanguageModel(
@@ -459,5 +478,4 @@ class AppConstants {
     GuidelineModel('order_setup', 'order_setup_description'),
     GuidelineModel('business_tin', 'business_tin_description'),
   ];
-  // static const double filterMaxPriceRange = 1000000;
 }

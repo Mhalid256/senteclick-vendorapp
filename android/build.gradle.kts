@@ -1,21 +1,45 @@
-import org.gradle.api.tasks.Delete
-import org.gradle.api.file.Directory
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.20")
+        classpath("com.google.gms:google-services:4.4.2")
+    }
+}
 
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
-    configurations.all {
-        resolutionStrategy {
-            force("org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
-            force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.20")
-            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20")
+}
+
+// Force Java 17 and Kotlin JVM 17 on all subprojects
+subprojects {
+    afterEvaluate {
+        // Java compilation tasks
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+        // Kotlin compilation tasks
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+        // Android modules (if any)
+        extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
     }
 }
 
-// Move build output to parent build folder
+// Build directory redirection (keep your existing structure)
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
@@ -24,12 +48,10 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-// Ensure :app is evaluated first
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Clean task
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
