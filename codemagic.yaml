@@ -8,6 +8,8 @@ workflows:
         - senteclick
     scripts:
       - rm -rf ~/.gradle/caches/transforms-*
+      - rm -rf ~/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin
+      - cd android && ./gradlew clean && cd ..
       - flutter clean
       - flutter pub get
       - flutter build apk --release --no-tree-shake-icons
