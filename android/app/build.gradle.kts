@@ -1,12 +1,16 @@
 import java.util.Properties
 import java.io.FileInputStream
 
+
+
 plugins {
-    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.7.2" apply false
-    id("org.jetbrains.kotlin.android") version "2.0.20" apply false
-    id("com.google.gms.google-services") version "4.4.2" apply false
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
+
+
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -16,71 +20,65 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.techsate.senteclick.seller"
-    compileSdk = 36
-    buildToolsVersion = "34.0.0"   // ← add this line
-    ndkVersion = "28.2.13676358"
+    compileSdk = flutter.compileSdkVersion
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-        }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
-        applicationId = "com.techsate.senteclick.seller"
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.sixamtech.sixvalley.seller"
         multiDexEnabled = true
         minSdk = flutter.minSdkVersion
-        targetSdk = 36
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     signingConfigs {
-        create("release") {
-            // 1️⃣ Codemagic environment variables (set when keystore is uploaded)
-            val cmStoreFile = System.getenv("CM_KEYSTORE_PATH")
-            val cmStorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
-            val cmKeyAlias = System.getenv("CM_KEY_ALIAS")
-            val cmKeyPassword = System.getenv("CM_KEY_PASSWORD")
+    create("release") {
+        // First, try Codemagic's injected environment variables
+        val cmStoreFile = System.getenv("CM_KEYSTORE_PATH")
+        val cmStorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+        val cmKeyAlias = System.getenv("CM_KEY_ALIAS")
+        val cmKeyPassword = System.getenv("CM_KEY_PASSWORD")
 
-            if (!cmStoreFile.isNullOrEmpty() && cmStoreFile.isNotBlank()) {
-                keyAlias = cmKeyAlias
-                keyPassword = cmKeyPassword
-                storeFile = file(cmStoreFile)
-                storePassword = cmStorePassword
-                println("✅ Using Codemagic keystore for vendor app")
-            } else if (keystorePropertiesFile.exists()) {
-                // 2️⃣ Local key.properties (for development)
-                keyAlias = keystoreProperties["keyAlias"] as? String
-                keyPassword = keystoreProperties["keyPassword"] as? String
-                storeFile = keystoreProperties["storeFile"]?.let { file(it.toString()) }
-                storePassword = keystoreProperties["storePassword"] as? String
-                println("✅ Using local key.properties for vendor app")
-            } else {
-                // 3️⃣ Debug fallback (never release this)
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
-                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-                storePassword = "android"
-                println("⚠️ WARNING: Using DEBUG keystore – DO NOT UPLOAD TO PLAY STORE!")
-            }
+        if (!cmStoreFile.isNullOrEmpty() && cmStoreFile.isNotBlank()) {
+            keyAlias = cmKeyAlias
+            keyPassword = cmKeyPassword
+            storeFile = file(cmStoreFile)
+            storePassword = cmStorePassword
+            println("✅ Using Codemagic keystore: $cmStoreFile")
+        } else if (keystorePropertiesFile.exists()) {
+            // Fallback to local key.properties
+            keyAlias = keystoreProperties["keyAlias"] as? String
+            keyPassword = keystoreProperties["keyPassword"] as? String
+            storeFile = keystoreProperties["storeFile"]?.let { file(it.toString()) }
+            storePassword = keystoreProperties["storePassword"] as? String
+            println("✅ Using key.properties keystore")
+        } else {
+            // Debug fallback (only for local development)
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            println("⚠️ WARNING: Using DEBUG keystore – DO NOT upload this AAB to Play Store!")
         }
     }
-
+}
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-            // Optionally enable minification
-            // isMinifyEnabled = true
-            // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release") // or "release" if you have real keystore
         }
     }
+
 }
 
 flutter {
@@ -88,13 +86,6 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("com.google.firebase:firebase-messaging:23.4.1")
-}
-
-
-configurations.all {
-    exclude(group = "com.android.support", module = "support-compat")
-    exclude(group = "com.android.support", module = "support-media-compat")
-    exclude(group = "com.android.support", module = "support-core-utils")
 }
