@@ -1,10 +1,41 @@
 import org.gradle.api.tasks.Delete
 import org.gradle.api.file.Directory
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
+        classpath("com.google.gms:google-services:4.4.2")
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+// Force Java 17 and Kotlin JVM 17 on all subprojects
+subprojects {
+    afterEvaluate {
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+        extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
     }
 }
 
@@ -17,12 +48,10 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-// Ensure :app is evaluated first
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Clean task
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
