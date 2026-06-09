@@ -5,21 +5,11 @@ workflows:
       flutter: stable
       java: 17
       android_signing:
-        - senteclick   # ← must match the name in Codemagic UI
+        - senteclick
     scripts:
-      - rm -rf ~/.gradle/caches/transforms-*   # clear cached transformed dependencies
+      - rm -rf ~/.gradle/caches/transforms-*
       - flutter clean
       - flutter pub get
       - flutter build apk --release --no-tree-shake-icons
     artifacts:
-      - build/**/outputs/**/*.aab
-
-
-
-
-
-
-
-
-
-      
+      - build/app/outputs/flutter-apk/*.apk   # ← captures the default release APK
