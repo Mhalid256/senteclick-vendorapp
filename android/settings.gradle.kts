@@ -1,5 +1,3 @@
-// settings.gradle
-
 // Configure Flutter SDK and plugins
 pluginManagement {
     val flutterSdkPath = run {
@@ -9,7 +7,6 @@ pluginManagement {
         require(flutterSdkPath != null) { "flutter.sdk not set in local.properties" }
         flutterSdkPath
     }
-
 
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
@@ -23,8 +20,8 @@ pluginManagement {
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.10.0" apply false
-    id("org.jetbrains.kotlin.android") version "2.1.20" apply false
-    id("com.google.gms.google-services") version "4.3.15" apply false
+    id("org.jetbrains.kotlin.android") version "2.3.10" apply false   // ✅ upgraded to 2.3.10
+    id("com.google.gms.google-services") version "4.4.2" apply false   // ✅ upgraded to 4.4.2
 }
 
 include(":app")

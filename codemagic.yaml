@@ -7,6 +7,7 @@ workflows:
       android_signing:
         - senteclick   # ← must match the name in Codemagic UI
     scripts:
+      - rm -rf ~/.gradle/caches/transforms-*   # clear cached transformed dependencies
       - flutter clean
       - flutter pub get
       - flutter build apk --release --no-tree-shake-icons
