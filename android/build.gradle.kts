@@ -20,18 +20,20 @@ allprojects {
     }
 }
 
-// Force Java 17 and Kotlin JVM 17 on all subprojects
+// Force Java 17 and Kotlin JVM 17 for all subprojects using the new compilerOptions DSL
 subprojects {
     afterEvaluate {
         tasks.withType<JavaCompile>().configureEach {
             sourceCompatibility = "17"
             targetCompatibility = "17"
         }
+        // ✅ Updated: use compilerOptions instead of deprecated kotlinOptions
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-            kotlinOptions {
-                jvmTarget = "17"
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
             }
         }
+        // For Android modules, set compileOptions as well
         extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileOptions {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
