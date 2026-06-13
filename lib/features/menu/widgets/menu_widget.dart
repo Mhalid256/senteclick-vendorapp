@@ -1,7 +1,29 @@
+// lib/features/menu/widgets/menu_widget.dart
+//
+// Each menu item now declares the module it belongs to. _handleMenuTap
+// checks employeeHasAccess() before navigating — vendor owners (non-employee)
+// always pass. Employees without the module see an "Access Denied" dialog
+// instead of a blank/broken screen.
+//
+// Module mapping used:
+//   profile, settings, bank_info, terms/about/policies, logout, app-info
+//     → always allowed (no module gate — basic account info & static pages)
+//   my_shop                → shop_settings
+//   add_product, products  → product_management
+//   reviews                → product_management
+//   coupons                → coupon_management
+//   deliveryman             → delivery_man
+//   pos                     → pos_management
+//   restock, clearance_sale → product_management
+//   wallet, vat_management  → dashboard  (financial overview)
+//   inbox                   → chat
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sixvalley_vendor_app/features/addProduct/screens/add_product_tab_view_screen.dart';
+import 'package:sixvalley_vendor_app/features/auth/controllers/auth_controller.dart';
+import 'package:sixvalley_vendor_app/features/auth/widgets/employee_access_guard.dart';
 import 'package:sixvalley_vendor_app/features/clearance_sale/screens/clearance_sale_screen.dart';
 import 'package:sixvalley_vendor_app/features/restock/screens/restock_list_screen.dart';
 import 'package:sixvalley_vendor_app/features/splash/domain/models/business_pages_model.dart';
@@ -36,201 +58,308 @@ class MenuBottomSheetWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ConfigModel? configModel = Provider.of<SplashController>(context, listen: false).configModel;
+    final ConfigModel? configModel =
+        Provider.of<SplashController>(context, listen: false).configModel;
 
+    return Consumer<SplashController>(builder: (context, splashController, _) {
+      List<CustomBottomSheetWidget> activateMenu = [
+        // Profile — always allowed
+        CustomBottomSheetWidget(
+          image:
+              '${Provider.of<ProfileController>(context, listen: false).userInfoModel?.imageFullUrl?.path}',
+          isProfile: true,
+          title: getTranslated('profile', context),
+          onTap: () => _handleMenuTap(context, const ProfileScreenView()),
+        ),
 
+        // My Shop — shop_settings
+        CustomBottomSheetWidget(
+          image: Images.myShop,
+          title: getTranslated('my_shop', context),
+          onTap: () => _handleMenuTap(context, const ShopScreen(),
+              module: 'shop_settings'),
+        ),
 
-    return Consumer<SplashController>(
-      builder: (context, splashController, _) {
+        // Add Product — product_management
+        CustomBottomSheetWidget(
+          image: Images.addProduct,
+          title: getTranslated('add_product', context),
+          onTap: () => _handleMenuTap(
+              context, const AddProductTabView(fromHome: false),
+              module: 'product_management'),
+        ),
 
-        List<CustomBottomSheetWidget> activateMenu = [
-          CustomBottomSheetWidget(image: '${Provider.of<ProfileController>(context, listen: false).userInfoModel?.imageFullUrl?.path}',
-            isProfile: true, title: getTranslated('profile', context),
-            onTap: () => _handleMenuTap(context, const ProfileScreenView())
+        // Products — product_management
+        CustomBottomSheetWidget(
+          image: Images.productIconPp,
+          title: getTranslated('products', context),
+          onTap: () => _handleMenuTap(context, const ProductListMenuScreen(),
+              module: 'product_management'),
+        ),
+
+        // Reviews — product_management
+        CustomBottomSheetWidget(
+          image: Images.reviewIcon,
+          title: getTranslated('reviews', context),
+          onTap: () => _handleMenuTap(context, const ProductReviewScreen(),
+              module: 'product_management'),
+        ),
+
+        // Coupons — coupon_management
+        CustomBottomSheetWidget(
+          image: Images.couponIcon,
+          title: getTranslated('coupons', context),
+          onTap: () => _handleMenuTap(context, const CouponListScreen(),
+              module: 'coupon_management'),
+        ),
+
+        // Delivery Man — delivery_man
+        CustomBottomSheetWidget(
+          image: Images.deliveryManIcon,
+          title: getTranslated('deliveryman', context),
+          onTap: () => _handleMenuTap(context, const DeliveryManSetupScreen(),
+              module: 'delivery_man'),
+        ),
+
+        // POS — pos_management
+        if (configModel?.posActive == 1 &&
+            Provider.of<ProfileController>(context, listen: false)
+                    .userInfoModel
+                    ?.posActive ==
+                1)
+          CustomBottomSheetWidget(
+            image: Images.pos,
+            title: getTranslated('pos', context),
+            onTap: () => _handleMenuTap(context, const NavBarScreen(),
+                module: 'pos_management'),
           ),
 
-          CustomBottomSheetWidget(image: Images.myShop, title: getTranslated('my_shop', context),
-            onTap: () => _handleMenuTap(context, const ShopScreen())
+        // Settings — shop_settings
+        CustomBottomSheetWidget(
+          image: Images.settings,
+          title: getTranslated('settings', context),
+          onTap: () => _handleMenuTap(context, const SettingsScreen(),
+              module: 'shop_settings'),
+        ),
+
+        // Restock — product_management
+        CustomBottomSheetWidget(
+          image: Images.restockIcon,
+          title: getTranslated('restock', context),
+          onTap: () => _handleMenuTap(context, const RestockListScreen(),
+              module: 'product_management'),
+        ),
+
+        // Clearance Sale — product_management
+        CustomBottomSheetWidget(
+          image: Images.clearanceSaleImage,
+          title: getTranslated('clearance_sale', context),
+          onTap: () => _handleMenuTap(context, const ClearanceSaleScreen(),
+              module: 'product_management'),
+        ),
+
+        // Wallet — dashboard (financial overview)
+        CustomBottomSheetWidget(
+          image: Images.wallet,
+          title: getTranslated('wallet', context),
+          onTap: () => _handleMenuTap(context, const WalletScreen(),
+              module: 'dashboard'),
+        ),
+
+        // Inbox — chat
+        CustomBottomSheetWidget(
+          image: Images.message,
+          title: getTranslated('inbox', context),
+          onTap: () =>
+              _handleMenuTap(context, const InboxScreen(), module: 'chat'),
+        ),
+
+        // VAT Management — dashboard (financial overview)
+        CustomBottomSheetWidget(
+          image: Images.reportIcon,
+          title: getTranslated('vat_management', context),
+          onTap: () => _handleMenuTap(context, const VatManagementScreen(),
+              module: 'dashboard'),
+        ),
+
+        // Bank Info — shop_settings
+        CustomBottomSheetWidget(
+          image: Images.bankingInfo,
+          title: getTranslated('bank_info', context),
+          onTap: () => _handleMenuTap(context, const BankInfoScreen(),
+              module: 'shop_settings'),
+        ),
+
+        // ── Static info pages — always allowed for everyone ──────────────
+        if (getPageBySlug('terms-and-conditions',
+                splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.termsAndCondition,
+            title: getTranslated('terms_and_condition', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug('terms-and-conditions',
+                        splashController.defaultBusinessPages))),
           ),
 
-          CustomBottomSheetWidget(image: Images.addProduct, title: getTranslated('add_product', context),
-            onTap: () => _handleMenuTap(context, const AddProductTabView(fromHome: false)),
+        if (getPageBySlug('about-us', splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.aboutUs,
+            title: getTranslated('about_us', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug(
+                        'about-us', splashController.defaultBusinessPages))),
           ),
 
-          CustomBottomSheetWidget(image: Images.productIconPp, title: getTranslated('products', context),
-            onTap: () => _handleMenuTap(context, const ProductListMenuScreen()),
+        if (getPageBySlug(
+                'privacy-policy', splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.privacyPolicy,
+            title: getTranslated('privacy_policy', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug('privacy-policy',
+                        splashController.defaultBusinessPages))),
           ),
 
-          CustomBottomSheetWidget(image: Images.reviewIcon, title: getTranslated('reviews', context),
-            onTap: () => _handleMenuTap(context, const ProductReviewScreen()),
+        if (getPageBySlug(
+                'refund-policy', splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.refundPolicy,
+            title: getTranslated('refund_policy', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug('refund-policy',
+                        splashController.defaultBusinessPages))),
           ),
 
-          CustomBottomSheetWidget(image: Images.couponIcon, title: getTranslated('coupons', context),
-            onTap: () => _handleMenuTap(context, const CouponListScreen()),
+        if (getPageBySlug(
+                'return-policy', splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.returnPolicy,
+            title: getTranslated('return_policy', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug('return-policy',
+                        splashController.defaultBusinessPages))),
           ),
 
-
-          CustomBottomSheetWidget(image: Images.deliveryManIcon, title: getTranslated('deliveryman', context),
-            onTap: () => _handleMenuTap(context, const DeliveryManSetupScreen()),
+        if (getPageBySlug(
+                'cancellation-policy', splashController.defaultBusinessPages) !=
+            null)
+          CustomBottomSheetWidget(
+            image: Images.cPolicy,
+            title: getTranslated('cancellation_policy', context),
+            onTap: () => _handleMenuTap(
+                context,
+                HtmlViewScreen(
+                    page: getPageBySlug('cancellation-policy',
+                        splashController.defaultBusinessPages))),
           ),
 
+        // Logout — always allowed
+        CustomBottomSheetWidget(
+          image: Images.logOut,
+          title: getTranslated('logout', context),
+          onTap: () async {
+            Navigator.pop(context); // Close bottom sheet
+            Future.microtask(
+              () => showModalBottomSheet(
+                  context: Get.context!,
+                  builder: (_) => const SignOutConfirmationDialogWidget()),
+            );
+          },
+        ),
 
-          if(configModel?.posActive == 1 && Provider.of<ProfileController>(context, listen: false).userInfoModel?.posActive == 1)
-            CustomBottomSheetWidget(image: Images.pos, title: getTranslated('pos', context),
-              onTap: () => _handleMenuTap(context, const NavBarScreen()),
-            ),
+        CustomBottomSheetWidget(
+            image: Images.appInfo,
+            title: 'v - ${AppConstants.appVersion}',
+            onTap: () {}),
+      ];
 
-
-          CustomBottomSheetWidget(image: Images.settings, title: getTranslated('settings', context),
-            onTap: () => _handleMenuTap(context, const SettingsScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.restockIcon, title: getTranslated('restock', context),
-            onTap: () => _handleMenuTap(context, const RestockListScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.clearanceSaleImage, title: getTranslated('clearance_sale', context),
-            onTap: () => _handleMenuTap(context, const ClearanceSaleScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.wallet, title: getTranslated('wallet', context),
-            onTap: () => _handleMenuTap(context, const WalletScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.message, title: getTranslated('inbox', context),
-            onTap: () => _handleMenuTap(context, const InboxScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.reportIcon, title: getTranslated('vat_management', context),
-            onTap: () => _handleMenuTap(context, const VatManagementScreen()),
-          ),
-
-
-          CustomBottomSheetWidget(image: Images.bankingInfo, title: getTranslated('bank_info', context),
-            onTap: () => _handleMenuTap(context, const BankInfoScreen()),
-          ),
-
-
-          if(getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages) != null)
-          CustomBottomSheetWidget(image: Images.termsAndCondition, title: getTranslated('terms_and_condition', context),
-            onTap : () => _handleMenuTap(context, HtmlViewScreen(
-              page: getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)
-            )),
-          ),
-
-
-          if(getPageBySlug('about-us', splashController.defaultBusinessPages) != null)
-          CustomBottomSheetWidget(image: Images.aboutUs, title: getTranslated('about_us', context),
-            onTap : () => _handleMenuTap(context, HtmlViewScreen(
-              page: getPageBySlug('about-us', splashController.defaultBusinessPages),
-            )),
-          ),
-
-          if(getPageBySlug('privacy-policy', splashController.defaultBusinessPages) != null)
-          CustomBottomSheetWidget(image: Images.privacyPolicy, title: getTranslated('privacy_policy', context),
-            onTap : () => _handleMenuTap(context, HtmlViewScreen(
-              page: getPageBySlug('privacy-policy', splashController.defaultBusinessPages),
-            )),
-          ),
-
-
-          if(getPageBySlug('refund-policy', splashController.defaultBusinessPages) != null)
-            CustomBottomSheetWidget(image: Images.refundPolicy, title: getTranslated('refund_policy', context),
-            onTap : () => _handleMenuTap(context, HtmlViewScreen(
-              page:getPageBySlug('refund-policy', splashController.defaultBusinessPages),
-            )),
-          ),
-
-
-          if(getPageBySlug('return-policy', splashController.defaultBusinessPages) != null)
-            CustomBottomSheetWidget(image: Images.returnPolicy, title: getTranslated('return_policy', context),
-              onTap : () => _handleMenuTap(context, HtmlViewScreen(
-                page: getPageBySlug('return-policy', splashController.defaultBusinessPages),
-              )),
-            ),
-
-
-          if(getPageBySlug('cancellation-policy', splashController.defaultBusinessPages) != null)
-            CustomBottomSheetWidget(image: Images.cPolicy, title: getTranslated('cancellation_policy', context),
-              onTap : () => _handleMenuTap(context, HtmlViewScreen(
-                page: getPageBySlug('cancellation-policy', splashController.defaultBusinessPages),
-              )),
-            ),
-
-
-          CustomBottomSheetWidget(image: Images.logOut, title: getTranslated('logout', context),
-            onTap: () async {
-              Navigator.pop(context); // Close bottom sheet
-              Future.microtask(
-                await showModalBottomSheet(context: context, builder: (_) => const SignOutConfirmationDialogWidget()),
-              );
-            }
-          ),
-
-          CustomBottomSheetWidget(image: Images.appInfo, title: 'v - ${AppConstants.appVersion}',
-              onTap: (){}),
-
-          // CustomBottomSheetWidget(
-          //   image: Images.appInfo, title: 'vat',
-          //   onTap: () { }
-          // ),
-
-        ];
-
-        return Container(decoration: BoxDecoration(
+      return Container(
+        decoration: BoxDecoration(
             color: Provider.of<ThemeController>(context).darkTheme
-                ? Theme.of(context).highlightColor : Theme.of(context).highlightColor,
-            borderRadius: const BorderRadius.only(topLeft:  Radius.circular(25), topRight: Radius.circular(25))),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-              GestureDetector(onTap: ()=> Navigator.pop(context),
-                child: Icon(Icons.keyboard_arrow_down_outlined,color: Theme.of(context).hintColor, size: Dimensions.iconSizeLarge,)),
-
-              const SizedBox(height: Dimensions.paddingSizeVeryTiny),
-              Consumer<ProfileController>(
-                builder: (context, profileProvider, child) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeDefault),
-                    child: GridView.count(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      children: activateMenu,
-                    ),
-                  );
-                }
-              ),
-            ],
+                ? Theme.of(context).highlightColor
+                : Theme.of(context).highlightColor,
+            borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25), topRight: Radius.circular(25))),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Icon(Icons.keyboard_arrow_down_outlined,
+                color: Theme.of(context).hintColor,
+                size: Dimensions.iconSizeLarge),
           ),
-        );
+          const SizedBox(height: Dimensions.paddingSizeVeryTiny),
+          Consumer<ProfileController>(
+              builder: (context, profileProvider, child) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeDefault,
+                  vertical: Dimensions.paddingSizeDefault),
+              child: GridView.count(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                crossAxisCount: 4,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                children: activateMenu,
+              ),
+            );
+          }),
+        ]),
+      );
+    });
+  }
+
+  /// Closes the bottom sheet then navigates — but only if the user
+  /// (vendor owner or employee) has access to [module].
+  ///
+  /// [module] = null means no permission check (static pages, profile,
+  /// logout, etc. — always allowed).
+  void _handleMenuTap(BuildContext context, Widget screen, {String? module}) {
+    Navigator.pop(context); // Close bottom sheet first either way
+
+    if (module != null) {
+      final auth = Provider.of<AuthController>(Get.context!, listen: false);
+      if (auth.isEmployee && !auth.employeeHasAccess(module)) {
+        // Slight delay so the bottom sheet has finished closing before
+        // the dialog opens on top of the dashboard.
+        Future.delayed(const Duration(milliseconds: 200), () {
+          EmployeeAccessGuard.checkOrShowDenied(Get.context!, module);
+        });
+        return;
       }
-    );
-  }
+    }
 
-  void _handleMenuTap(BuildContext context, Widget screen) {
-    Navigator.pop(context); // Close bottom sheet
     Future.microtask(() => Navigator.push(
-      Get.context!,
-      MaterialPageRoute(builder: (_) => screen),
-    ));
+          Get.context!,
+          MaterialPageRoute(builder: (_) => screen),
+        ));
   }
 
-  BusinessPageModel? getPageBySlug(String slug, List<BusinessPageModel>? pagesList) {
+  BusinessPageModel? getPageBySlug(
+      String slug, List<BusinessPageModel>? pagesList) {
     BusinessPageModel? pageModel;
-    if(pagesList != null && pagesList.isNotEmpty){
+    if (pagesList != null && pagesList.isNotEmpty) {
       for (var page in pagesList) {
-        if(page.slug == slug) {
+        if (page.slug == slug) {
           pageModel = page;
         }
       }
     }
     return pageModel;
   }
-
 }

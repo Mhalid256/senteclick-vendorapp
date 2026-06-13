@@ -1,0 +1,70 @@
+// lib/features/auth/widgets/employee_access_guard.dart
+//
+// Reusable helper for gating navigation to menu items based on
+// employee module_access. Use this in menu_widget.dart (and anywhere
+// else a tap navigates to a feature screen).
+//
+// Usage:
+//   onTap: () => EmployeeAccessGuard.navigateIfAllowed(
+//     context: context,
+//     module: 'product_management',
+//     builder: (_) => const ProductListScreen(),
+//   ),
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sixvalley_vendor_app/features/auth/controllers/auth_controller.dart';
+import 'package:sixvalley_vendor_app/localization/language_constrants.dart';
+
+class EmployeeAccessGuard {
+  /// Checks if the current session (vendor or employee) has access to
+  /// [module]. Vendor owners always return true.
+  static bool hasAccess(BuildContext context, String module) {
+    return Provider.of<AuthController>(context, listen: false)
+        .employeeHasAccess(module);
+  }
+
+  /// Navigates to the screen built by [builder] if the user has access
+  /// to [module]. If not, shows an "Access Denied" dialog instead of
+  /// navigating to a blank/broken screen.
+  static void navigateIfAllowed({
+    required BuildContext context,
+    required String module,
+    required WidgetBuilder builder,
+  }) {
+    if (hasAccess(context, module)) {
+      Navigator.push(context, MaterialPageRoute(builder: builder));
+    } else {
+      _showAccessDenied(context);
+    }
+  }
+
+  /// For actions that aren't navigation (e.g. opening a bottom sheet).
+  /// Returns true if allowed (caller should proceed), false if denied
+  /// (this method has already shown the dialog).
+  static bool checkOrShowDenied(BuildContext context, String module) {
+    if (hasAccess(context, module)) return true;
+    _showAccessDenied(context);
+    return false;
+  }
+
+  static void _showAccessDenied(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(getTranslated('access_denied', ctx) ?? 'Access Denied'),
+        content: Text(
+          getTranslated(
+                  'you_do_not_have_permission_to_access_this_feature', ctx) ??
+              'You do not have permission to access this feature. Contact your shop owner if you need access.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(getTranslated('ok', ctx) ?? 'OK'),
+          ),
+        ],
+      ),
+    );
+  }
+}

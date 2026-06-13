@@ -1,4 +1,5 @@
 // lib/features/auth/screens/employee_login_screen.dart
+// Logo/header removed — AuthScreen already shows the shared logo above the tabs.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,11 @@ import 'package:sixvalley_vendor_app/utill/images.dart';
 import 'package:sixvalley_vendor_app/utill/styles.dart';
 
 class EmployeeLoginScreen extends StatefulWidget {
-  const EmployeeLoginScreen({super.key});
+  /// Optional callback to switch the parent TabController back to the
+  /// Vendor tab (index 0). If null, the "Are you a vendor?" link is hidden.
+  final VoidCallback? onSwitchToVendor;
+
+  const EmployeeLoginScreen({super.key, this.onSwitchToVendor});
 
   @override
   State<EmployeeLoginScreen> createState() => _EmployeeLoginScreenState();
@@ -72,9 +77,10 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       password: password,
     );
 
-    if (response.response?.statusCode == 200) {
-      Navigator.pushAndRemoveUntil(
-        Get.context!,
+    if (response.response?.statusCode == 200 && mounted) {
+      // Use pushAndRemoveUntil with rootNavigator so this replaces the
+      // ENTIRE navigation stack (including AuthScreen and its TabBarView).
+      Navigator.of(Get.context!, rootNavigator: true).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
         (route) => false,
       );
@@ -83,55 +89,14 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer<AuthController>(
-        builder: (context, auth, _) {
-          return SingleChildScrollView(
+    return Consumer<AuthController>(
+      builder: (context, auth, _) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: Dimensions.paddingSizeLarge),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Header ──────────────────────────────────────────────────
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).size.height / 12,
-                        bottom: 38),
-                    child: Column(children: [
-                      Hero(
-                        tag: 'logo',
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              top: Dimensions.paddingSizeExtraLarge),
-                          child: Image.asset(Images.logo, width: 80),
-                        ),
-                      ),
-                      Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              getTranslated('staff', context) ?? 'Staff',
-                              style: robotoMedium.copyWith(
-                                  fontSize: Dimensions.fontSizeExtraLargeTwenty,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.color),
-                            ),
-                            const SizedBox(
-                                width: Dimensions.paddingSizeExtraSmall),
-                            Text(
-                              getTranslated('login', context) ?? 'Login',
-                              style: robotoMedium.copyWith(
-                                  color: Theme.of(context).primaryColor,
-                                  fontSize:
-                                      Dimensions.fontSizeExtraLargeTwenty),
-                            ),
-                          ]),
-                    ]),
-                  ),
-                ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: Dimensions.paddingSizeDefault),
@@ -154,77 +119,72 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                         color: Theme.of(context).hintColor),
                   ),
                 ),
-
                 const SizedBox(height: Dimensions.paddingSizeLarge),
-
-                // ── Form ────────────────────────────────────────────────────
                 Form(
                   key: _formKey,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: Dimensions.paddingSizeSmall),
-                    child: Column(children: [
-                      // Email
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: Dimensions.paddingSizeLarge,
-                            vertical: Dimensions.paddingSizeSmall),
-                        child: CustomTextFieldWidget(
-                          border: true,
-                          prefixIconImage: Images.emailIcon,
-                          hintText:
-                              getTranslated('enter_email_address', context),
-                          focusNode: _emailFocus,
-                          nextNode: _passwordFocus,
-                          textInputType: TextInputType.emailAddress,
-                          controller: _emailController,
-                        ),
+                  child: Column(children: [
+                    // Email
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: Dimensions.paddingSizeLarge,
+                          vertical: Dimensions.paddingSizeSmall),
+                      child: CustomTextFieldWidget(
+                        border: true,
+                        prefixIconImage: Images.emailIcon,
+                        hintText: getTranslated('enter_email_address', context),
+                        focusNode: _emailFocus,
+                        nextNode: _passwordFocus,
+                        textInputType: TextInputType.emailAddress,
+                        controller: _emailController,
                       ),
+                    ),
 
-                      // Password
-                      Container(
-                        margin: const EdgeInsets.only(
-                            left: Dimensions.paddingSizeLarge,
-                            right: Dimensions.paddingSizeLarge,
-                            bottom: Dimensions.paddingSizeDefault),
-                        child: CustomTextFieldWidget(
-                          border: true,
-                          isPassword: true,
-                          prefixIconImage: Images.lock,
-                          hintText: getTranslated('password_hint', context),
-                          focusNode: _passwordFocus,
-                          textInputAction: TextInputAction.done,
-                          controller: _passwordController,
-                        ),
+                    // Password
+                    Container(
+                      margin: const EdgeInsets.only(
+                          left: Dimensions.paddingSizeLarge,
+                          right: Dimensions.paddingSizeLarge,
+                          bottom: Dimensions.paddingSizeDefault),
+                      child: CustomTextFieldWidget(
+                        border: true,
+                        isPassword: true,
+                        prefixIconImage: Images.lock,
+                        hintText: getTranslated('password_hint', context),
+                        focusNode: _passwordFocus,
+                        textInputAction: TextInputAction.done,
+                        controller: _passwordController,
                       ),
+                    ),
 
-                      const SizedBox(height: Dimensions.paddingSizeButton),
+                    const SizedBox(height: Dimensions.paddingSizeButton),
 
-                      // Login button
-                      auth.isEmployeeLoading
-                          ? Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme.of(context).primaryColor),
-                              ),
-                            )
-                          : Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 70),
-                              child: CustomButtonWidget(
-                                borderRadius: 100,
-                                backgroundColor: Theme.of(context).primaryColor,
-                                btnTxt: getTranslated('login', context),
-                                onTap: () => _submit(auth),
-                              ),
+                    // Login button
+                    auth.isEmployeeLoading
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).primaryColor),
                             ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 70),
+                            child: CustomButtonWidget(
+                              borderRadius: 100,
+                              backgroundColor: Theme.of(context).primaryColor,
+                              btnTxt: getTranslated('login', context),
+                              onTap: () => _submit(auth),
+                            ),
+                          ),
 
-                      // Back to vendor login
+                    // Switch back to vendor tab (NOT Navigator.pop — that
+                    // caused the black screen because there was nothing
+                    // beneath AuthScreen in the navigation stack).
+                    if (widget.onSwitchToVendor != null)
                       Padding(
                         padding: const EdgeInsets.symmetric(
                             vertical: Dimensions.paddingSizeDefault),
                         child: InkWell(
-                          onTap: () => Navigator.pop(context),
+                          onTap: widget.onSwitchToVendor,
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -249,14 +209,15 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               ]),
                         ),
                       ),
-                    ]),
-                  ),
+
+                    const SizedBox(height: Dimensions.paddingSizeBottomSpace),
+                  ]),
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

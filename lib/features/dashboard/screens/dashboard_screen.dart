@@ -1,5 +1,12 @@
 // lib/features/dashboard/screens/dashboard_screen.dart
-// Adds employee-aware navigation — hides tabs the employee has no access to.
+//
+// Fixes:
+//  1. POS tab added to nav items (was completely missing for employees)
+//  2. Nav items rebuilt in didChangeDependencies (not just initState) so
+//     freshly-written SharedPreferences module_access is picked up —
+//     this was why login showed a blank "Menu only" screen until app restart
+//  3. If _navItems ends up empty for any reason, fall back to showing
+//     Home so the screen is never blank
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +18,7 @@ import 'package:sixvalley_vendor_app/features/addProduct/controllers/digital_pro
 import 'package:sixvalley_vendor_app/features/ai/controllers/ai_controller.dart';
 import 'package:sixvalley_vendor_app/features/auth/controllers/auth_controller.dart';
 import 'package:sixvalley_vendor_app/features/pos/controllers/cart_controller.dart';
+import 'package:sixvalley_vendor_app/features/pos/screens/pos_screen.dart';
 import 'package:sixvalley_vendor_app/features/product/controllers/category_controller.dart';
 import 'package:sixvalley_vendor_app/features/shop/controllers/shop_controller.dart';
 import 'package:sixvalley_vendor_app/features/splash/controllers/splash_controller.dart';
@@ -38,14 +46,34 @@ class DashboardScreen extends StatefulWidget {
 class DashboardScreenState extends State<DashboardScreen> {
   final PageController _pageController = PageController();
   int _pageIndex = 0;
-  late List<_NavItem> _navItems;
+  List<_NavItem> _navItems = [];
+  bool _dataLoaded = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
 
   @override
   void initState() {
     super.initState();
+    NetworkInfo.checkConnectivity(context);
+  }
 
+  /// Runs every time this screen's dependencies change — critically,
+  /// the FIRST time it runs is right after the widget tree is built
+  /// following login, by which point SharedPreferences has been written
+  /// with module_access. initState() alone was too early in some cases.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_dataLoaded) {
+      _dataLoaded = true;
+      _loadInitialData();
+      _navItems =
+          _buildNavItems(Provider.of<AuthController>(context, listen: false));
+      setState(() {});
+    }
+  }
+
+  void _loadInitialData() {
     final auth = Provider.of<AuthController>(context, listen: false);
     final bool isEmployee = auth.isEmployee;
 
@@ -60,12 +88,12 @@ class DashboardScreenState extends State<DashboardScreen> {
                 .countryCode!
                 .toLowerCase();
 
-    // Always fetch seller/employee profile info
+    // Always fetch profile info (works for both vendor and employee —
+    // ProfileController.getSellerInfo() uses the seller token either way)
     Provider.of<ProfileController>(context, listen: false).getSellerInfo();
     Provider.of<CategoryController>(context, listen: false)
         .getCategoryList(context, null, languageCode);
 
-    // Only load data the employee has access to
     if (!isEmployee || auth.employeeHasAccess('pos_management')) {
       Provider.of<CartController>(context, listen: false).getCartData();
     }
@@ -91,31 +119,34 @@ class DashboardScreenState extends State<DashboardScreen> {
         1) {
       Provider.of<AiController>(context, listen: false).generateLimitCheck();
     }
-
-    // Build nav items — filter out tabs the employee cannot access
-    _navItems = _buildNavItems(auth);
-
-    NetworkInfo.checkConnectivity(context);
   }
 
-  /// Build the navigation items based on whether this is an employee session
-  /// and which modules they have access to.
+  /// Build the bottom navigation tabs based on employee module_access.
+  /// Vendor owners (isEmployee == false) always see everything.
   List<_NavItem> _buildNavItems(AuthController auth) {
     final bool isEmployee = auth.isEmployee;
     final items = <_NavItem>[];
 
-    // Home / Dashboard — shown if has dashboard access (or is vendor)
+    // Home / Dashboard
     if (!isEmployee || auth.employeeHasAccess('dashboard')) {
       items.add(_NavItem(
         icon: Images.home,
         label: 'home',
-        screen: HomePageScreen(callback: () {
-          setState(() => _goToTab(1));
-        }),
+        screen:
+            HomePageScreen(callback: () => _goToTab(_indexOfLabel('my_order'))),
       ));
     }
 
-    // Orders — shown if has order_management access (or is vendor)
+    // POS — was completely missing before. Added here.
+    if (!isEmployee || auth.employeeHasAccess('pos_management')) {
+      items.add(_NavItem(
+        icon: Images.pos,
+        label: 'pos',
+        screen: const PosScreen(),
+      ));
+    }
+
+    // Orders
     if (!isEmployee || auth.employeeHasAccess('order_management')) {
       items.add(_NavItem(
         icon: Images.order,
@@ -124,7 +155,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       ));
     }
 
-    // Refund — shown if has order_management access (or is vendor)
+    // Refund (part of order management)
     if (!isEmployee || auth.employeeHasAccess('order_management')) {
       items.add(_NavItem(
         icon: Images.refund,
@@ -133,30 +164,55 @@ class DashboardScreenState extends State<DashboardScreen> {
       ));
     }
 
-    // Menu is always shown — it contains all other features gated inside
-    items.add(_NavItem(
-      icon: Images.menu,
-      label: 'menu',
-      screen: null, // menu opens as bottom sheet
-    ));
+    // Menu is always available — individual menu items are gated
+    // inside MenuBottomSheetWidget with access-denied messaging.
+    items.add(const _NavItem(icon: Images.menu, label: 'menu', screen: null));
+
+    // Safety net: if somehow everything except Menu got filtered out
+    // (e.g. employee has zero modules), still show Home so the screen
+    // is never blank.
+    final hasRealScreen = items.any((i) => i.screen != null);
+    if (!hasRealScreen) {
+      items.insert(
+        0,
+        _NavItem(
+          icon: Images.home,
+          label: 'home',
+          screen: HomePageScreen(callback: () {}),
+        ),
+      );
+    }
 
     return items;
   }
 
+  int _indexOfLabel(String label) {
+    final idx = _navItems.indexWhere((i) => i.label == label);
+    return idx == -1 ? 0 : idx;
+  }
+
   void _goToTab(int index) {
-    if (index < _navItems.length) {
-      setState(() {
-        _pageController.jumpToPage(index);
-        _pageIndex = index;
-      });
-    }
+    final screens = _navItems.where((i) => i.screen != null).toList();
+    if (index < 0 || index >= screens.length) return;
+    setState(() {
+      _pageController.jumpToPage(index);
+      _pageIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // While the first frame is building, _navItems may briefly be empty —
+    // show a loader instead of a blank screen.
+    if (_navItems.isEmpty) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final screens = _navItems
         .where((item) => item.screen != null)
-        .map((item) => item.screen!)
+        .map((i) => i.screen!)
         .toList();
 
     return PopScope(
@@ -197,7 +253,13 @@ class DashboardScreenState extends State<DashboardScreen> {
                 builder: (con) => const MenuBottomSheetWidget(),
               );
             } else {
-              _goToTab(index);
+              // Map full nav index → screens-only index
+              final screenIndex = _navItems
+                      .sublist(0, index + 1)
+                      .where((i) => i.screen != null)
+                      .length -
+                  1;
+              _goToTab(screenIndex);
             }
           },
         ),
@@ -211,17 +273,28 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  BottomNavigationBarItem _barItem(String icon, String? label, int index) {
+  BottomNavigationBarItem _barItem(String icon, String? label, int navIndex) {
+    // currentIndex comparison uses the screens-only index for screens,
+    // but BottomNavigationBar needs currentIndex aligned with `items` order.
+    // We keep _pageIndex as the screens-only index and compute the
+    // corresponding nav index for highlighting.
+    final screenIndexForThisItem = _navItems
+            .sublist(0, navIndex + 1)
+            .where((i) => i.screen != null)
+            .length -
+        1;
+    final isSelected = _navItems[navIndex].screen != null &&
+        screenIndexForThisItem == _pageIndex;
+
     return BottomNavigationBarItem(
       icon: Padding(
         padding:
             const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
         child: SizedBox(
-          width: index == _pageIndex
-              ? Dimensions.iconSizeLarge
-              : Dimensions.iconSizeMedium,
+          width:
+              isSelected ? Dimensions.iconSizeLarge : Dimensions.iconSizeMedium,
           child: Image.asset(icon,
-              color: index == _pageIndex
+              color: isSelected
                   ? Theme.of(context).primaryColor
                   : Theme.of(context).hintColor),
         ),
