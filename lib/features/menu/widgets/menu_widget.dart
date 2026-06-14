@@ -63,13 +63,15 @@ class MenuBottomSheetWidget extends StatelessWidget {
 
     return Consumer<SplashController>(builder: (context, splashController, _) {
       List<CustomBottomSheetWidget> activateMenu = [
-        // Profile — always allowed
+        // Profile — OWNER ONLY. Contains the vendor's personal account
+        // details; staff should never see or edit this.
         CustomBottomSheetWidget(
           image:
               '${Provider.of<ProfileController>(context, listen: false).userInfoModel?.imageFullUrl?.path}',
           isProfile: true,
           title: getTranslated('profile', context),
-          onTap: () => _handleMenuTap(context, const ProfileScreenView()),
+          onTap: () => _handleMenuTap(context, const ProfileScreenView(),
+              ownerOnly: true),
         ),
 
         // My Shop — shop_settings
@@ -117,7 +119,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
         CustomBottomSheetWidget(
           image: Images.deliveryManIcon,
           title: getTranslated('deliveryman', context),
-          onTap: () => _handleMenuTap(context, const DeliveryManSetupScreen(),
+          onTap: () => _handleMenuTap(
+              context, const DeliveryManSetupScreen(),
               module: 'delivery_man'),
         ),
 
@@ -158,20 +161,21 @@ class MenuBottomSheetWidget extends StatelessWidget {
               module: 'product_management'),
         ),
 
-        // Wallet — dashboard (financial overview)
+        // Wallet — OWNER ONLY. Withdrawals and account balance must
+        // never be visible or actionable by staff.
         CustomBottomSheetWidget(
           image: Images.wallet,
           title: getTranslated('wallet', context),
           onTap: () => _handleMenuTap(context, const WalletScreen(),
-              module: 'dashboard'),
+              ownerOnly: true),
         ),
 
         // Inbox — chat
         CustomBottomSheetWidget(
           image: Images.message,
           title: getTranslated('inbox', context),
-          onTap: () =>
-              _handleMenuTap(context, const InboxScreen(), module: 'chat'),
+          onTap: () => _handleMenuTap(context, const InboxScreen(),
+              module: 'chat'),
         ),
 
         // VAT Management — dashboard (financial overview)
@@ -182,12 +186,13 @@ class MenuBottomSheetWidget extends StatelessWidget {
               module: 'dashboard'),
         ),
 
-        // Bank Info — shop_settings
+        // Bank Info — OWNER ONLY. Bank account numbers and payout
+        // details must never be visible to staff.
         CustomBottomSheetWidget(
           image: Images.bankingInfo,
           title: getTranslated('bank_info', context),
           onTap: () => _handleMenuTap(context, const BankInfoScreen(),
-              module: 'shop_settings'),
+              ownerOnly: true),
         ),
 
         // ── Static info pages — always allowed for everyone ──────────────
@@ -216,8 +221,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         'about-us', splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'privacy-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('privacy-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.privacyPolicy,
@@ -229,8 +234,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'refund-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('refund-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.refundPolicy,
@@ -242,8 +247,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'return-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('return-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.returnPolicy,
@@ -255,8 +260,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'cancellation-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('cancellation-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.cPolicy,
@@ -303,8 +308,7 @@ class MenuBottomSheetWidget extends StatelessWidget {
                 size: Dimensions.iconSizeLarge),
           ),
           const SizedBox(height: Dimensions.paddingSizeVeryTiny),
-          Consumer<ProfileController>(
-              builder: (context, profileProvider, child) {
+          Consumer<ProfileController>(builder: (context, profileProvider, child) {
             return Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: Dimensions.paddingSizeDefault,
@@ -361,19 +365,24 @@ class MenuBottomSheetWidget extends StatelessWidget {
     return userInfo.posActive == 1;
   }
 
-  void _handleMenuTap(BuildContext context, Widget screen, {String? module}) {
+  void _handleMenuTap(BuildContext context, Widget screen,
+      {String? module, bool ownerOnly = false}) {
     Navigator.pop(context); // Close bottom sheet first either way
 
-    if (module != null) {
-      final auth = Provider.of<AuthController>(Get.context!, listen: false);
-      if (auth.isEmployee && !auth.employeeHasAccess(module)) {
-        // Slight delay so the bottom sheet has finished closing before
-        // the dialog opens on top of the dashboard.
-        Future.delayed(const Duration(milliseconds: 200), () {
-          EmployeeAccessGuard.checkOrShowDenied(Get.context!, module);
-        });
-        return;
-      }
+    final auth = Provider.of<AuthController>(Get.context!, listen: false);
+
+    if (ownerOnly && auth.isEmployee) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        EmployeeAccessGuard.checkOwnerOrShowDenied(Get.context!);
+      });
+      return;
+    }
+
+    if (module != null && auth.isEmployee && !auth.employeeHasAccess(module)) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        EmployeeAccessGuard.checkOrShowDenied(Get.context!, module);
+      });
+      return;
     }
 
     Future.microtask(() => Navigator.push(
