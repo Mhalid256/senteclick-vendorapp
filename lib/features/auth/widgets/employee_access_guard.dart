@@ -60,4 +60,25 @@ class EmployeeAccessGuard {
       ),
     );
   }
+
+  /// Shows a dialog telling the employee that this feature is restricted
+  /// to the shop owner only.
+  static void checkOwnerOrShowDenied(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Access Denied'),
+        content: const Text(
+          'This feature is only available to the shop owner. '
+          'Please contact your shop owner if you need access.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 }
