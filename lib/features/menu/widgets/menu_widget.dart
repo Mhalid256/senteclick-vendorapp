@@ -119,7 +119,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
         CustomBottomSheetWidget(
           image: Images.deliveryManIcon,
           title: getTranslated('deliveryman', context),
-          onTap: () => _handleMenuTap(context, const DeliveryManSetupScreen(),
+          onTap: () => _handleMenuTap(
+              context, const DeliveryManSetupScreen(),
               module: 'delivery_man'),
         ),
 
@@ -165,16 +166,16 @@ class MenuBottomSheetWidget extends StatelessWidget {
         CustomBottomSheetWidget(
           image: Images.wallet,
           title: getTranslated('wallet', context),
-          onTap: () =>
-              _handleMenuTap(context, const WalletScreen(), ownerOnly: true),
+          onTap: () => _handleMenuTap(context, const WalletScreen(),
+              ownerOnly: true),
         ),
 
         // Inbox — chat
         CustomBottomSheetWidget(
           image: Images.message,
           title: getTranslated('inbox', context),
-          onTap: () =>
-              _handleMenuTap(context, const InboxScreen(), module: 'chat'),
+          onTap: () => _handleMenuTap(context, const InboxScreen(),
+              module: 'chat'),
         ),
 
         // VAT Management — dashboard (financial overview)
@@ -190,8 +191,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
         CustomBottomSheetWidget(
           image: Images.bankingInfo,
           title: getTranslated('bank_info', context),
-          onTap: () =>
-              _handleMenuTap(context, const BankInfoScreen(), ownerOnly: true),
+          onTap: () => _handleMenuTap(context, const BankInfoScreen(),
+              ownerOnly: true),
         ),
 
         // ── Static info pages — always allowed for everyone ──────────────
@@ -220,8 +221,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         'about-us', splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'privacy-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('privacy-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.privacyPolicy,
@@ -233,8 +234,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'refund-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('refund-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.refundPolicy,
@@ -246,8 +247,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'return-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('return-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.returnPolicy,
@@ -259,8 +260,8 @@ class MenuBottomSheetWidget extends StatelessWidget {
                         splashController.defaultBusinessPages))),
           ),
 
-        if (getPageBySlug(
-                'cancellation-policy', splashController.defaultBusinessPages) !=
+        if (getPageBySlug('cancellation-policy',
+                splashController.defaultBusinessPages) !=
             null)
           CustomBottomSheetWidget(
             image: Images.cPolicy,
@@ -307,8 +308,7 @@ class MenuBottomSheetWidget extends StatelessWidget {
                 size: Dimensions.iconSizeLarge),
           ),
           const SizedBox(height: Dimensions.paddingSizeVeryTiny),
-          Consumer<ProfileController>(
-              builder: (context, profileProvider, child) {
+          Consumer<ProfileController>(builder: (context, profileProvider, child) {
             return Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: Dimensions.paddingSizeDefault,

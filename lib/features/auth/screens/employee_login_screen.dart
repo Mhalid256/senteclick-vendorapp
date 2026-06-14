@@ -106,7 +106,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: Dimensions.paddingSizeDefault),
                   child: Text(
-                    getTranslated('staff_login', context) ?? 'Staff Login',
+                    getTranslated('staff login', context) ?? 'Staff Login',
                     style: titilliumBold.copyWith(
                         fontSize: Dimensions.fontSizeOverlarge,
                         color: Theme.of(context).textTheme.bodyLarge?.color),
@@ -117,7 +117,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                       horizontal: Dimensions.paddingSizeDefault,
                       vertical: Dimensions.paddingSizeSmall),
                   child: Text(
-                    getTranslated('login_with_your_staff_account', context) ??
+                    getTranslated('login with your staff account', context) ??
                         'Login with your staff account credentials',
                     style: titilliumRegular.copyWith(
                         fontSize: Dimensions.fontSizeDefault,
@@ -194,7 +194,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  getTranslated('are_you_a_vendor', context) ??
+                                  getTranslated('are you a vendor', context) ??
                                       'Are you a vendor?',
                                   style: robotoRegular.copyWith(
                                       color: Theme.of(context)
@@ -205,7 +205,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                                 const SizedBox(
                                     width: Dimensions.paddingSizeSmall),
                                 Text(
-                                  getTranslated('vendor_login', context) ??
+                                  getTranslated('vendor login', context) ??
                                       'Vendor Login',
                                   style: robotoTitleRegular.copyWith(
                                       color: Theme.of(context).primaryColor,
