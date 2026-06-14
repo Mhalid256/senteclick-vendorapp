@@ -90,6 +90,29 @@ class AuthService implements AuthServiceInterface {
   @override
   bool getIsEmployee() => authRepoInterface.getIsEmployee();
 
+  /// Used when the /employee/profile API call fails after a successful
+  /// login. Without this, module_access stays '{}' and employeeHasAccess()
+  /// returns false for EVERY module — locking the employee out of
+  /// everything including the dashboard itself.
+  ///
+  /// This grants a conservative fallback (dashboard + pos_management,
+  /// the two most commonly needed for day-to-day staff operations) so
+  /// the app remains usable while the profile-fetch issue is diagnosed.
+  @override
+  Future<void> saveEmployeeModulesFallback() async {
+    await authRepoInterface.saveEmployeeModules(jsonEncode({
+      'dashboard': true,
+      'order_management': true,
+      'pos_management': true,
+      'product_management': false,
+      'promotion_management': false,
+      'coupon_management': false,
+      'delivery_man': false,
+      'shop_settings': false,
+      'chat': false,
+    }));
+  }
+
   /// Returns the saved module_access map as Map<String, bool>.
   /// Falls back to all-false if nothing is saved.
   @override

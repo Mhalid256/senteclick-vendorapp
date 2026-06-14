@@ -1,20 +1,14 @@
 // lib/features/auth/widgets/employee_access_guard.dart
 //
-// Reusable helper for gating navigation to menu items based on
-// employee module_access. Use this in menu_widget.dart (and anywhere
-// else a tap navigates to a feature screen).
-//
-// Usage:
-//   onTap: () => EmployeeAccessGuard.navigateIfAllowed(
-//     context: context,
-//     module: 'product_management',
-//     builder: (_) => const ProductListScreen(),
-//   ),
+// FIX: getTranslated() in this app returns the KEY ITSELF (not null) when
+// a translation is missing — so `?? 'fallback'` never triggered, and raw
+// keys like "access_denied" and "you_do_not_have_permission_to_..." were
+// shown verbatim with underscores. We now hardcode the English strings
+// directly instead of relying on translation keys that don't exist yet.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sixvalley_vendor_app/features/auth/controllers/auth_controller.dart';
-import 'package:sixvalley_vendor_app/localization/language_constrants.dart';
 
 class EmployeeAccessGuard {
   /// Checks if the current session (vendor or employee) has access to
@@ -52,16 +46,15 @@ class EmployeeAccessGuard {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(getTranslated('access_denied', ctx) ?? 'Access Denied'),
-        content: Text(
-          getTranslated(
-                  'you_do_not_have_permission_to_access_this_feature', ctx) ??
-              'You do not have permission to access this feature. Contact your shop owner if you need access.',
+        title: const Text('Access Denied'),
+        content: const Text(
+          'You do not have permission to access this feature. '
+          'Contact your shop owner if you need access.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(getTranslated('ok', ctx) ?? 'OK'),
+            child: const Text('OK'),
           ),
         ],
       ),

@@ -121,12 +121,12 @@ class MenuBottomSheetWidget extends StatelessWidget {
               module: 'delivery_man'),
         ),
 
-        // POS — pos_management
-        if (configModel?.posActive == 1 &&
-            Provider.of<ProfileController>(context, listen: false)
-                    .userInfoModel
-                    ?.posActive ==
-                1)
+        // POS — for employees: show whenever they have pos_management,
+        // independent of the vendor's posActive config (that check was
+        // causing POS to disappear entirely for employee sessions because
+        // userInfoModel was often null/unloaded at menu-build time).
+        // For vendor owners (non-employee): keep the original posActive gate.
+        if (_shouldShowPos(context, configModel))
           CustomBottomSheetWidget(
             image: Images.pos,
             title: getTranslated('pos', context),
@@ -329,6 +329,38 @@ class MenuBottomSheetWidget extends StatelessWidget {
   ///
   /// [module] = null means no permission check (static pages, profile,
   /// logout, etc. — always allowed).
+  /// Determines whether the POS menu item should be visible.
+  ///
+  /// - Employee with pos_management access → always show (POS is core
+  ///   to their job; don't gate it behind the vendor's posActive flag
+  ///   which may not be loaded yet on first menu render).
+  /// - Employee WITHOUT pos_management → hidden (they'd just get
+  ///   access-denied anyway).
+  /// - Vendor owner → original behaviour: only show if posActive is
+  ///   enabled both globally (configModel) and for this shop
+  ///   (userInfoModel), when that data has loaded. If userInfoModel
+  ///   hasn't loaded yet, default to showing POS rather than hiding it,
+  ///   since hiding-by-default caused confusion.
+  bool _shouldShowPos(BuildContext context, ConfigModel? configModel) {
+    final auth = Provider.of<AuthController>(context, listen: false);
+
+    if (auth.isEmployee) {
+      return auth.employeeHasAccess('pos_management');
+    }
+
+    // Vendor owner
+    final userInfo =
+        Provider.of<ProfileController>(context, listen: false).userInfoModel;
+
+    if (configModel?.posActive != 1) return false;
+
+    // If shop-level posActive hasn't loaded yet, don't hide POS —
+    // assume enabled until proven otherwise.
+    if (userInfo == null) return true;
+
+    return userInfo.posActive == 1;
+  }
+
   void _handleMenuTap(BuildContext context, Widget screen, {String? module}) {
     Navigator.pop(context); // Close bottom sheet first either way
 

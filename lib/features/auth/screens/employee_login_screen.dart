@@ -77,6 +77,11 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       password: password,
     );
 
+    // employeeLogin() now returns the LOGIN response (status 200 means
+    // the token was issued successfully). Navigation no longer depends
+    // on the profile/module_access fetch succeeding — if that fails,
+    // the employee still reaches the dashboard with a safe fallback
+    // (dashboard-only access) instead of being stuck forever.
     if (response.response?.statusCode == 200 && mounted) {
       // Use pushAndRemoveUntil with rootNavigator so this replaces the
       // ENTIRE navigation stack (including AuthScreen and its TabBarView).

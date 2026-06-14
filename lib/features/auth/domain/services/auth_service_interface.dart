@@ -40,6 +40,7 @@ abstract class AuthServiceInterface {
   Future<dynamic> employeeLogin(
       {required String email, required String password});
   Future<dynamic> fetchAndSaveEmployeeProfile();
+  Future<void> saveEmployeeModulesFallback();
   bool getIsEmployee();
   Map<String, bool> getEmployeeModules();
   bool employeeHasAccess(String module);

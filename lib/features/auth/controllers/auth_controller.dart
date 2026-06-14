@@ -167,21 +167,53 @@ class AuthController with ChangeNotifier {
     ApiResponse loginResponse = await authServiceInterface.employeeLogin(
         email: email, password: password);
 
+    if (kDebugMode) {
+      debugPrint(
+          '[EMPLOYEE LOGIN] status=${loginResponse.response?.statusCode} '
+          'data=${loginResponse.response?.data} error=${loginResponse.error}');
+    }
+
     if (loginResponse.response?.statusCode == 200) {
-      // Step 3 + 4: fetch profile and persist module_access
+      // Step 3 + 4: fetch profile and persist module_access.
+      // This MUST complete (success or failure) before we return —
+      // otherwise _buildNavItems runs against an empty module map.
       ApiResponse profileResponse =
           await authServiceInterface.fetchAndSaveEmployeeProfile();
 
+      if (kDebugMode) {
+        debugPrint(
+            '[EMPLOYEE PROFILE] status=${profileResponse.response?.statusCode} '
+            'data=${profileResponse.response?.data} error=${profileResponse.error}');
+        debugPrint(
+            '[EMPLOYEE MODULES SAVED] ${authServiceInterface.getEmployeeModules()}');
+      }
+
       if (profileResponse.response?.statusCode == 200) {
         _employeeModel = EmployeeModel.fromJson(profileResponse.response!.data);
+      } else {
+        // Profile fetch failed — module_access stays empty, which means
+        // employeeHasAccess() returns false for everything. Give the
+        // employee at least dashboard access as a safe fallback so the
+        // app isn't completely unusable, and surface the error.
+        if (kDebugMode) {
+          debugPrint(
+              '[EMPLOYEE PROFILE FAILED] Falling back to dashboard-only access.');
+        }
+        await authServiceInterface
+            .saveEmployeeModulesFallback(); // see auth_service.dart
       }
 
       // Update FCM token just like vendor login
       await updateToken(Get.context!);
       setUnAuthorize(false);
+
       _isEmployeeLoading = false;
       notifyListeners();
-      return profileResponse; // caller navigates on 200
+
+      // Return the LOGIN response (200) regardless of profile outcome —
+      // the employee should still reach the dashboard even if module
+      // fetching had issues. The dashboard will just show fewer tabs.
+      return loginResponse;
     }
 
     _isEmployeeLoading = false;
